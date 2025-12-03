@@ -1,0 +1,434 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		044D572F2ECF31FD002A876F /* VoiceEchoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 044D572E2ECF31FD002A876F /* VoiceEchoService.swift */; };
+		04F5BC2E2ECCE92500686FE3 /* LLMService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04F5BC2B2ECCE92500686FE3 /* LLMService.swift */; };
+		04F5BC2F2ECCE92500686FE3 /* DataRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04F5BC292ECCE92500686FE3 /* DataRecorder.swift */; };
+		04F5BC302ECCE92500686FE3 /* FaceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04F5BC2A2ECCE92500686FE3 /* FaceTracker.swift */; };
+		04F5BC312ECCE92500686FE3 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 04F5BC2C2ECCE92500686FE3 /* Preview Assets.xcassets */; };
+		04F5BC352ECCFD6C00686FE3 /* LogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04F5BC332ECCFD6C00686FE3 /* LogService.swift */; };
+		04F5BC362ECCFD6C00686FE3 /* ChatModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04F5BC322ECCFD6C00686FE3 /* ChatModels.swift */; };
+		04F5BC372ECCFD6C00686FE3 /* SensorHub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04F5BC342ECCFD6C00686FE3 /* SensorHub.swift */; };
+		04F5BC3B2ECD00EA00686FE3 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 04F5BC392ECD00EA00686FE3 /* Preview Assets.xcassets */; };
+		04F5BC3C2ECD00EA00686FE3 /* HorrorEffectsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04F5BC382ECD00EA00686FE3 /* HorrorEffectsManager.swift */; };
+		04F5BC432ECD0A0B00686FE3 /* HeartbeatHaptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04F5BC422ECD0A0B00686FE3 /* HeartbeatHaptics.swift */; };
+		A1000020294A1A000000000A /* HollowSignalApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000002294A1A0000000001 /* HollowSignalApp.swift */; };
+		A1000021294A1A000000000B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000004294A1A0000000002 /* ContentView.swift */; };
+		A1000022294A1A000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1000006294A1A0000000003 /* Assets.xcassets */; };
+		A1000023294A1A000000000D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1000008294A1A0000000004 /* Preview Assets.xcassets */; };
+		A1000024294A1A000000000E /* GameStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000010294A1A0000000005 /* GameStateManager.swift */; };
+		A1000025294A1A000000000F /* SensorManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000012294A1A0000000006 /* SensorManager.swift */; };
+		A1000026294A1A0000000010 /* SpeechRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000014294A1A0000000007 /* SpeechRecognizer.swift */; };
+		A1000027294A1A0000000011 /* ReactionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000016294A1A0000000008 /* ReactionEngine.swift */; };
+		A1000028294A1A0000000012 /* TextDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000018294A1A0000000009 /* TextDisplayView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		044D572E2ECF31FD002A876F /* VoiceEchoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceEchoService.swift; sourceTree = "<group>"; };
+		04F5BC292ECCE92500686FE3 /* DataRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataRecorder.swift; sourceTree = "<group>"; };
+		04F5BC2A2ECCE92500686FE3 /* FaceTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceTracker.swift; sourceTree = "<group>"; };
+		04F5BC2B2ECCE92500686FE3 /* LLMService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMService.swift; sourceTree = "<group>"; };
+		04F5BC2C2ECCE92500686FE3 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		04F5BC322ECCFD6C00686FE3 /* ChatModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatModels.swift; sourceTree = "<group>"; };
+		04F5BC332ECCFD6C00686FE3 /* LogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogService.swift; sourceTree = "<group>"; };
+		04F5BC342ECCFD6C00686FE3 /* SensorHub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorHub.swift; sourceTree = "<group>"; };
+		04F5BC382ECD00EA00686FE3 /* HorrorEffectsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HorrorEffectsManager.swift; sourceTree = "<group>"; };
+		04F5BC392ECD00EA00686FE3 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		04F5BC422ECD0A0B00686FE3 /* HeartbeatHaptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartbeatHaptics.swift; sourceTree = "<group>"; };
+		A0FFFFFF294A1A0000000001 /* HollowSignal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HollowSignal.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1000002294A1A0000000001 /* HollowSignalApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HollowSignalApp.swift; sourceTree = "<group>"; };
+		A1000004294A1A0000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A1000006294A1A0000000003 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A1000008294A1A0000000004 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		A1000010294A1A0000000005 /* GameStateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameStateManager.swift; sourceTree = "<group>"; };
+		A1000012294A1A0000000006 /* SensorManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorManager.swift; sourceTree = "<group>"; };
+		A1000014294A1A0000000007 /* SpeechRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognizer.swift; sourceTree = "<group>"; };
+		A1000016294A1A0000000008 /* ReactionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionEngine.swift; sourceTree = "<group>"; };
+		A1000018294A1A0000000009 /* TextDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextDisplayView.swift; sourceTree = "<group>"; };
+		A100002C294A1A0000000016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A1000029294A1A0000000013 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		04F5BC2D2ECCE92500686FE3 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				04F5BC2C2ECCE92500686FE3 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		04F5BC3A2ECD00EA00686FE3 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				04F5BC392ECD00EA00686FE3 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		A0FFFFF8294A1A0000000001 = {
+			isa = PBXGroup;
+			children = (
+				A100000A294A1A0000000010 /* HollowSignal */,
+				A0FFFFFA294A1A0000000004 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A0FFFFFA294A1A0000000004 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A0FFFFFF294A1A0000000001 /* HollowSignal.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A1000009294A1A0000000005 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				A1000008294A1A0000000004 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		A100000A294A1A0000000010 /* HollowSignal */ = {
+			isa = PBXGroup;
+			children = (
+				044D572E2ECF31FD002A876F /* VoiceEchoService.swift */,
+				04F5BC382ECD00EA00686FE3 /* HorrorEffectsManager.swift */,
+				04F5BC422ECD0A0B00686FE3 /* HeartbeatHaptics.swift */,
+				04F5BC3A2ECD00EA00686FE3 /* Preview Content */,
+				04F5BC322ECCFD6C00686FE3 /* ChatModels.swift */,
+				04F5BC332ECCFD6C00686FE3 /* LogService.swift */,
+				04F5BC342ECCFD6C00686FE3 /* SensorHub.swift */,
+				04F5BC292ECCE92500686FE3 /* DataRecorder.swift */,
+				04F5BC2A2ECCE92500686FE3 /* FaceTracker.swift */,
+				04F5BC2B2ECCE92500686FE3 /* LLMService.swift */,
+				04F5BC2D2ECCE92500686FE3 /* Preview Content */,
+				A1000002294A1A0000000001 /* HollowSignalApp.swift */,
+				A1000004294A1A0000000002 /* ContentView.swift */,
+				A1000010294A1A0000000005 /* GameStateManager.swift */,
+				A1000012294A1A0000000006 /* SensorManager.swift */,
+				A1000014294A1A0000000007 /* SpeechRecognizer.swift */,
+				A1000016294A1A0000000008 /* ReactionEngine.swift */,
+				A1000018294A1A0000000009 /* TextDisplayView.swift */,
+				A1000006294A1A0000000003 /* Assets.xcassets */,
+				A100002C294A1A0000000016 /* Info.plist */,
+				A1000009294A1A0000000005 /* Preview Content */,
+			);
+			path = HollowSignal;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A0FFFFFD294A1A0000000001 /* HollowSignal */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A0FFFFFE294A1A0000000003 /* Build configuration list for PBXNativeTarget "HollowSignal" */;
+			buildPhases = (
+				A100002A294A1A0000000014 /* Sources */,
+				A1000029294A1A0000000013 /* Frameworks */,
+				A100002B294A1A0000000015 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = HollowSignal;
+			productName = HollowSignal;
+			productReference = A0FFFFFF294A1A0000000001 /* HollowSignal.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A0FFFFF9294A1A0000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+			};
+			buildConfigurationList = A0FFFFFD294A1A0000000002 /* Build configuration list for PBXProject "HollowSignal" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A0FFFFF8294A1A0000000001;
+			productRefGroup = A0FFFFFA294A1A0000000004 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A0FFFFFD294A1A0000000001 /* HollowSignal */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A100002B294A1A0000000015 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				04F5BC3B2ECD00EA00686FE3 /* Preview Assets.xcassets in Resources */,
+				A1000023294A1A000000000D /* Preview Assets.xcassets in Resources */,
+				04F5BC312ECCE92500686FE3 /* Preview Assets.xcassets in Resources */,
+				A1000022294A1A000000000C /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A100002A294A1A0000000014 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000021294A1A000000000B /* ContentView.swift in Sources */,
+				A1000024294A1A000000000E /* GameStateManager.swift in Sources */,
+				A1000025294A1A000000000F /* SensorManager.swift in Sources */,
+				A1000026294A1A0000000010 /* SpeechRecognizer.swift in Sources */,
+				04F5BC3C2ECD00EA00686FE3 /* HorrorEffectsManager.swift in Sources */,
+				04F5BC432ECD0A0B00686FE3 /* HeartbeatHaptics.swift in Sources */,
+				A1000027294A1A0000000011 /* ReactionEngine.swift in Sources */,
+				044D572F2ECF31FD002A876F /* VoiceEchoService.swift in Sources */,
+				04F5BC2E2ECCE92500686FE3 /* LLMService.swift in Sources */,
+				04F5BC2F2ECCE92500686FE3 /* DataRecorder.swift in Sources */,
+				04F5BC302ECCE92500686FE3 /* FaceTracker.swift in Sources */,
+				04F5BC352ECCFD6C00686FE3 /* LogService.swift in Sources */,
+				04F5BC362ECCFD6C00686FE3 /* ChatModels.swift in Sources */,
+				04F5BC372ECCFD6C00686FE3 /* SensorHub.swift in Sources */,
+				A1000028294A1A0000000012 /* TextDisplayView.swift in Sources */,
+				A1000020294A1A000000000A /* HollowSignalApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A0FFFFFB294A1A0000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A0FFFFFC294A1A0000000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		A1000000294A1A0000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"HollowSignal/Preview Content\"";
+				DEVELOPMENT_TEAM = 88G8G534F3;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = HollowSignal/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Приложение использует камеру для фиксации несоответствий в восприятии.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Приложение анализирует звуки для документирования сенсорных аномалий.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Приложение распознаёт речь для анализа сенсорной десинхронизации.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hollowsignal.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A1000001294A1A0000000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"HollowSignal/Preview Content\"";
+				DEVELOPMENT_TEAM = 88G8G534F3;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = HollowSignal/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Приложение использует камеру для фиксации несоответствий в восприятии.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Приложение анализирует звуки для документирования сенсорных аномалий.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Приложение распознаёт речь для анализа сенсорной десинхронизации.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hollowsignal.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A0FFFFFD294A1A0000000002 /* Build configuration list for PBXProject "HollowSignal" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A0FFFFFB294A1A0000000001 /* Debug */,
+				A0FFFFFC294A1A0000000001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A0FFFFFE294A1A0000000003 /* Build configuration list for PBXNativeTarget "HollowSignal" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1000000294A1A0000000001 /* Debug */,
+				A1000001294A1A0000000001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A0FFFFF9294A1A0000000001 /* Project object */;
+}
