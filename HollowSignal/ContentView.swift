@@ -11,31 +11,65 @@ struct ContentView: View {
     @EnvironmentObject var faceTracker: FaceTracker
     @EnvironmentObject var sensorHub: SensorHub
     
+    var onDismiss: (() -> Void)?
     @State private var showTypingIndicator = false
     @State private var composerText: String = ""
+    
+    @State private var isAppearing = false
+    @AppStorage("devModeEnabled") private var devModeEnabled = false
     
     var body: some View {
         ZStack {
             gradientBackground
             
-            VStack(spacing: 12) {
+            Color.black
+                .ignoresSafeArea()
+                .opacity(isAppearing ? 0 : 1)
+                .animation(.easeInOut(duration: 1.5), value: isAppearing)
+            
+            VStack(spacing: 0) {
+                headerBar
+                    .opacity(isAppearing ? 1 : 0)
+                
                 chatTimeline
+                    .opacity(isAppearing ? 1 : 0)
                 
                 if gameState.isTyping {
                     typingIndicator
-                        .padding(.bottom, 20)
+                        .padding(.vertical, 12)
+                        .opacity(isAppearing ? 1 : 0)
                 }
                 
                 composer
+                    .opacity(isAppearing ? 1 : 0)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 40)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .animation(.easeInOut(duration: 1.5), value: isAppearing)
             
-        
+            if devModeEnabled {
+                DevOverlayView()
+                    .opacity(isAppearing ? 1 : 0)
+                    .allowsHitTesting(false)
+            }
         }
         .onAppear {
+            // Перезапускаем игру при каждом появлении экрана
+            gameState.startGame()
             setupGame()
             showTypingIndicator = true
+            
+            // Плавное появление чата из темноты
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                isAppearing = true
+            }
+        }
+        .onDisappear {
+            // Останавливаем всё при закрытии экрана
+            HorrorEffectsManager.shared.stopHeartbeatLoop()
+            VoiceEchoService.shared.cleanup()
+            speechRecognizer.stopListening()
+            faceTracker.stopTracking()
+            dataRecorder.stopRecording()
         }
         .onChange(of: speechRecognizer.recognizedText) { text in
             guard !text.isEmpty else { return }
@@ -78,10 +112,43 @@ struct ContentView: View {
             .ignoresSafeArea()
     }
     
+    private var headerBar: some View {
+        HStack {
+            Button(action: {
+                // Останавливаем все эффекты и сенсоры перед возвратом в меню
+                HorrorEffectsManager.shared.stopHeartbeatLoop()
+                VoiceEchoService.shared.cleanup()
+                speechRecognizer.stopListening()
+                faceTracker.stopTracking()
+                dataRecorder.stopRecording()
+                onDismiss?()
+            }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 14, weight: .medium))
+                    Text("MENU")
+                        .font(.system(size: 14, weight: .light, design: .default))
+                        .tracking(1)
+                }
+                .foregroundColor(Color(red: 0.0, green: 0.35, blue: 0.18).opacity(0.9))
+            }
+            
+            Spacer()
+            
+            Text("HOLLOW SIGNAL")
+                .font(.system(size: 12, weight: .light, design: .default))
+                .foregroundColor(.white.opacity(0.5))
+                .tracking(2)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(Color.black.opacity(0.5))
+    }
+    
     private var chatTimeline: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 12) {
+                LazyVStack(alignment: .leading, spacing: 0) {
                     ForEach(gameState.timeline.messages) { message in
                         ChatBubbleView(message: message)
                             .id(message.id)
@@ -89,7 +156,7 @@ struct ContentView: View {
                             .animation(.easeInOut(duration: 0.3), value: message.isCorrupted)
                     }
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, 16)
                 .onChange(of: gameState.timeline.messages.count) { _ in
                     if let last = gameState.timeline.messages.last {
                         withAnimation(.easeInOut(duration: 0.4)) {
@@ -205,24 +272,33 @@ struct ContentView: View {
     
     private var composer: some View {
         HStack(spacing: 12) {
-            TextField("напечатайте…", text: $composerText, axis: .vertical)
+            TextField("Type a message...", text: $composerText, axis: .vertical)
                 .textInputAutocapitalization(.sentences)
                 .disableAutocorrection(true)
-                .padding(.vertical, 10)
-                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .padding(.horizontal, 16)
                 .foregroundColor(.white)
+                .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color.white.opacity(0.1))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(Color(red: 0.0, green: 0.35, blue: 0.18).opacity(0.5), lineWidth: 1)
+                        )
+                )
             
             Button(action: sendTypedMessage) {
                 Image(systemName: "arrow.up.circle.fill")
-                    .font(.system(size: 26))
+                    .font(.system(size: 28))
                     .foregroundStyle(
                         composerText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                        ? Color.white.opacity(0.4)
-                        : Color.white
+                        ? Color.white.opacity(0.3)
+                        : Color(red: 0.0, green: 0.35, blue: 0.18)
                     )
             }
             .disabled(composerText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
+        .padding(.horizontal, 16)
         .padding(.bottom, 24)
     }
 }
@@ -232,23 +308,91 @@ struct ChatBubbleView: View {
     let message: ChatMessage
     
     var body: some View {
-        HStack {
+        HStack(alignment: .bottom, spacing: 8) {
             if message.role == .entity {
-                bubble
-                Spacer()
+                entityBubble
+                Spacer(minLength: 60)
             } else {
-                Spacer()
-                bubble
+                Spacer(minLength: 60)
+                userBubble
             }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 4)
+    }
+    
+    private var entityBubble: some View {
+        HStack(alignment: .bottom, spacing: 8) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(message.text)
+                    .font(.system(size: 16, weight: .regular, design: .default))
+                    .foregroundColor(.white)
+                    .fixedSize(horizontal: false, vertical: true)
+                
+                Text(formatTime(message.timestamp))
+                    .font(.system(size: 11, weight: .light, design: .default))
+                    .foregroundColor(.white.opacity(0.4))
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(Color.white.opacity(0.12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(Color(red: 0.0, green: 0.35, blue: 0.18).opacity(0.4), lineWidth: 0.5)
+                    )
+            )
+            
+            Circle()
+                .fill(Color(red: 0.0, green: 0.35, blue: 0.18).opacity(0.7))
+                .frame(width: 24, height: 24)
+                .overlay(
+                    Text("H")
+                        .font(.system(size: 10, weight: .bold, design: .default))
+                        .foregroundColor(.black)
+                )
         }
     }
     
-    private var bubble: some View {
-        Text(message.text)
-            .font(.system(size: 17, weight: .regular, design: .default))
-            .foregroundColor(message.role == .entity ? .white : .white)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+    private var userBubble: some View {
+        HStack(alignment: .bottom, spacing: 8) {
+            Circle()
+                .fill(Color.white.opacity(0.3))
+                .frame(width: 24, height: 24)
+                .overlay(
+                    Text("Y")
+                        .font(.system(size: 10, weight: .bold, design: .default))
+                        .foregroundColor(.white)
+                )
+            
+            VStack(alignment: .trailing, spacing: 4) {
+                Text(message.text)
+                    .font(.system(size: 16, weight: .regular, design: .default))
+                    .foregroundColor(.white)
+                    .fixedSize(horizontal: false, vertical: true)
+                
+                Text(formatTime(message.timestamp))
+                    .font(.system(size: 11, weight: .light, design: .default))
+                    .foregroundColor(.white.opacity(0.4))
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(Color(red: 0.0, green: 0.35, blue: 0.18).opacity(0.2))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(Color(red: 0.0, green: 0.35, blue: 0.18).opacity(0.5), lineWidth: 0.5)
+                    )
+            )
+        }
+    }
+    
+    private func formatTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
     }
 }
 
@@ -256,18 +400,71 @@ struct DevOverlayView: View {
     @StateObject private var logListener = DevOverlayViewModel()
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            ForEach(logListener.entries.suffix(4)) { entry in
-                Text("[\(entry.channel.rawValue)] \(entry.message)")
-                    .font(.caption2.monospaced())
-                    .foregroundColor(.white.opacity(0.8))
+        ScrollView {
+            VStack(alignment: .leading, spacing: 6) {
+                ForEach(logListener.entries.suffix(10)) { entry in
+                    HStack(alignment: .top, spacing: 8) {
+                        Text(channelIcon(entry.channel))
+                            .font(.caption2.monospaced())
+                            .foregroundColor(channelColor(entry.channel))
+                            .frame(width: 20)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("[\(entry.channel.rawValue.uppercased())]")
+                                .font(.caption2.monospaced().bold())
+                                .foregroundColor(channelColor(entry.channel))
+                            
+                            Text(entry.message)
+                                .font(.caption2.monospaced())
+                                .foregroundColor(.white.opacity(0.9))
+                                .lineLimit(2)
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                }
             }
+            .padding(12)
         }
-        .padding(8)
-        .background(Color.black.opacity(0.5))
-        .cornerRadius(8)
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+        .frame(maxWidth: 350, maxHeight: 300)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.black.opacity(0.75))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                )
+        )
+        .padding(.leading, 16)
+        .padding(.top, 60)
+    }
+    
+    private func channelIcon(_ channel: LogService.Channel) -> String {
+        switch channel {
+        case .system: return "⚙️"
+        case .sensors: return "📡"
+        case .llm: return "🤖"
+        case .game: return "🎮"
+        case .ui: return "🖼️"
+        case .audio: return "🔊"
+        case .haptics: return "📳"
+        case .error: return "❌"
+        }
+    }
+    
+    private func channelColor(_ channel: LogService.Channel) -> Color {
+        switch channel {
+        case .system: return .gray
+        case .sensors: return .blue
+        case .llm: return .purple
+        case .game: return .green
+        case .ui: return .orange
+        case .audio: return .yellow
+        case .haptics: return .pink
+        case .error: return .red
+        }
     }
 }
 
@@ -302,7 +499,7 @@ struct NoiseView: View {
 }
 
 #Preview {
-    ContentView()
+    ContentView(onDismiss: nil)
         .environmentObject(GameStateManager())
         .environmentObject(SensorManager())
         .environmentObject(SpeechRecognizer())
@@ -312,4 +509,5 @@ struct NoiseView: View {
         .environmentObject(FaceTracker())
         .environmentObject(SensorHub.shared)
 }
+
 

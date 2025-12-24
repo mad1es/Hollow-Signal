@@ -41,6 +41,16 @@ class GameStateManager: ObservableObject {
         currentPhase = .loading
         currentText = ""
         isTyping = false
+        timeline = ChatTimeline()
+        playerActions = []
+        playerSaidAlone = false
+        playerWasTense = false
+        playerMoved = false
+        playerSpoke = false
+        
+        // Останавливаем все эффекты
+        HorrorEffectsManager.shared.stopHeartbeatLoop()
+        VoiceEchoService.shared.cleanup()
         
         // Первая фаза - загрузка
         // Показываем текст "подождите..." сразу
@@ -111,11 +121,14 @@ class GameStateManager: ObservableObject {
             // Фаза 1: Loading (0:00-0:05) - 5 секунд
             if elapsed >= 5 {
                 currentPhase = .initialContact
+                HorrorEffectsManager.shared.triggerHeartbeatPulse(bpm: 65)
                 displayText("подождите...")
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    HorrorEffectsManager.shared.triggerHeartbeatPulse(bpm: 70)
                     self.displayText("ты здесь?")
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                    HorrorEffectsManager.shared.triggerHeartbeatPulse(bpm: 72)
                     self.displayText("я вижу тебя...")
                 }
             }
@@ -153,18 +166,31 @@ class GameStateManager: ObservableObject {
             // Фаза 6: Deepening Contact (3:00-4:00) - 60 секунд
             if elapsed >= 240 && previousPhase == .deepeningContact {
                 currentPhase = .anomalies
+                HorrorEffectsManager.shared.startHeartbeatLoop(bpm: 85)
+                HorrorEffectsManager.shared.playHorrorSound(.deepRumble, volume: 0.4)
                 displayText("что-то не так...")
             }
         case .anomalies:
             // Фаза 7: Anomalies (4:00-4:30) - 30 секунд
             if elapsed >= 270 && previousPhase == .anomalies {
                 currentPhase = .ending
+                
+                // Интенсивные эффекты в финале
+                HorrorEffectsManager.shared.triggerHeartbeatPulse(bpm: 120)
+                HorrorEffectsManager.shared.playHorrorSound(.deepRumble, volume: 0.8)
+                HorrorEffectsManager.shared.flashTorch(duration: 0.5)
+                
                 displayText("я не в телефоне...")
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    HorrorEffectsManager.shared.triggerHeartbeatPulse(bpm: 130)
+                    HorrorEffectsManager.shared.playHorrorSound(.screech, volume: 0.7)
                     self.displayText("я в тебе...")
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                        HorrorEffectsManager.shared.triggerHeartbeatPulse(bpm: 140)
+                        HorrorEffectsManager.shared.playHorrorSound(.staticNoise, volume: 0.6)
                         self.displayText("и ты это знаешь...")
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                            HorrorEffectsManager.shared.stopHeartbeatLoop()
                             self.displayText("вернёмся позже...")
                         }
                     }

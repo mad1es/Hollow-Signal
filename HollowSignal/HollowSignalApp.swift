@@ -22,11 +22,23 @@ struct HollowSignalApp: App {
         
         // Включаем мониторинг батареи
         UIDevice.current.isBatteryMonitoringEnabled = true
+        
+        // Инициализация настроек по умолчанию
+        let defaults = UserDefaults.standard
+        if defaults.object(forKey: "hapticsEnabled") == nil {
+            defaults.set(true, forKey: "hapticsEnabled")
+        }
+        if defaults.object(forKey: "soundsEnabled") == nil {
+            defaults.set(true, forKey: "soundsEnabled")
+        }
+        if defaults.object(forKey: "voiceEchoEnabled") == nil {
+            defaults.set(true, forKey: "voiceEchoEnabled")
+        }
     }
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MenuView()
                 .environmentObject(gameState)
                 .environmentObject(sensorManager)
                 .environmentObject(speechRecognizer)
@@ -35,7 +47,7 @@ struct HollowSignalApp: App {
                 .environmentObject(dataRecorder)
                 .environmentObject(faceTracker)
                 .environmentObject(sensorHub)
-                .preferredColorScheme(.dark) // Темная тема
+                .preferredColorScheme(.dark)
                 .onAppear {
                     sensorHub.bind(
                         sensorManager: sensorManager,

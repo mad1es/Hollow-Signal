@@ -86,6 +86,18 @@ class ReactionEngine: ObservableObject {
             return
         }
         
+        // В фазе anomalies записываем голос для эхо эффекта
+        if gameState.currentPhase == .anomalies && UserDefaults.standard.bool(forKey: "voiceEchoEnabled") {
+            VoiceEchoService.shared.startRecording()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                VoiceEchoService.shared.stopRecording()
+                // Воспроизводим искаженный эхо через некоторое время
+                if Double.random(in: 0...1) > 0.5 {
+                    VoiceEchoService.shared.playEcho(delay: Double.random(in: 5...10), distortionIntensity: 0.9)
+                }
+            }
+        }
+        
         lastReactionTime = Date()
         let lowerText = text.lowercased()
         
@@ -410,13 +422,23 @@ class ReactionEngine: ObservableObject {
         
         echoEffectShown = true
         
-        // В реальной реализации здесь бы записывался голос и воспроизводился с задержкой
-        // Для MVP просто показываем реакцию
+        // Запускаем запись голоса для эхо эффекта
+        VoiceEchoService.shared.startRecording()
+        
         gameState.displayText("я слышу эхо...")
+        effects.playHorrorSound(.whisper, volume: 0.5)
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             gameState.displayText("это твой голос?")
+            self.effects.playHorrorSound(.staticNoise, volume: 0.3)
+            
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 gameState.displayText("или мой?")
+                
+                // Останавливаем запись и воспроизводим искаженный эхо
+                VoiceEchoService.shared.stopRecording()
+                VoiceEchoService.shared.playEcho(delay: 1.0, distortionIntensity: 0.9)
+                self.effects.playHorrorSound(.deepRumble, volume: 0.6)
             }
         }
     }
@@ -430,9 +452,15 @@ class ReactionEngine: ObservableObject {
         
         movementPredictionShown = true
         
+        effects.playHorrorSound(.screech, volume: 0.6)
+        effects.triggerHeartbeatPulse(bpm: 100)
+        effects.flashTorch(duration: 0.3)
+        
         gameState.displayText("я видел это раньше...")
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             gameState.displayText("я видел это до того, как ты это сделал...")
+            self.effects.playHorrorSound(.staticNoise, volume: 0.5)
+            self.effects.triggerHeartbeatPulse(bpm: 110)
         }
     }
     
@@ -446,11 +474,19 @@ class ReactionEngine: ObservableObject {
         
         breathingSyncShown = true
         
+        // Запускаем heartbeat loop синхронизированный с дыханием
+        effects.startHeartbeatLoop(bpm: 80)
+        effects.playHorrorSound(.heartbeat, volume: 0.4)
+        
         gameState.displayText("твоё дыхание...")
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             gameState.displayText("и моё...")
+            self.effects.triggerHeartbeatPulse(bpm: 85)
+            
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 gameState.displayText("одно и то же...")
+                self.effects.triggerHeartbeatPulse(bpm: 90)
+                self.effects.playHorrorSound(.deepRumble, volume: 0.5)
             }
         }
     }
@@ -641,6 +677,8 @@ private extension ReactionEngine {
             if isNear {
                 scheduleEntityMessage("не отводи экран", effects: [.whisper])
                 effects.flashTorch()
+                effects.triggerHeartbeatPulse(bpm: 75)
+                effects.playHorrorSound(.whisper, volume: 0.3)
             }
         case .location(let location):
             LogService.shared.log(.sensors, "location \(location.coordinate.latitude),\(location.coordinate.longitude)")
