@@ -114,6 +114,103 @@ final class HorrorEffectsManager {
             }
         }
     }
+    
+    /// Системная вибрация - самая надежная, не использует CoreHaptics
+    func triggerSystemVibration(count: Int = 1, interval: TimeInterval = 0.5) {
+        guard hapticsEnabled else { return }
+        
+        DispatchQueue.main.async {
+            for i in 0..<count {
+                DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * interval) {
+                    AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
+                }
+            }
+        }
+    }
+    
+    /// Интенсивная вибрация для запугивания
+    func triggerIntenseVibration(duration: TimeInterval = 2.0) {
+        triggerSystemVibration(count: 4, interval: duration / 4.0)
+    }
+    
+    /// ОЧЕНЬ СИЛЬНАЯ И НАДЕЖНАЯ вибрация для режима безумия
+    func triggerCrazyModeVibration() {
+        guard hapticsEnabled else { return }
+        
+        // Используем ТОЛЬКО системную вибрацию - это самый надежный способ
+        DispatchQueue.main.async {
+            // Первая серия - 15 быстрых вибраций
+            for i in 0..<15 {
+                DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.15) {
+                    AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
+                }
+            }
+            
+            // Вторая серия через 2 секунды
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                for j in 0..<10 {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + Double(j) * 0.12) {
+                        AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
+                    }
+                }
+            }
+        }
+    }
+    
+    /// Громкие пугающие звуки в начале игры
+    func playIntenseStartupSounds() {
+        guard soundsEnabled else { return }
+        
+        queue.async { [weak self] in
+            // Серия громких звуков
+            self?.playSystemSound(type: .screech, volume: 1.0)
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                self?.playSystemSound(type: .deepRumble, volume: 1.0)
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                self?.playSystemSound(type: .staticNoise, volume: 1.0)
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
+                self?.playSystemSound(type: .screech, volume: 0.9)
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                self?.playSystemSound(type: .deepRumble, volume: 0.8)
+            }
+        }
+    }
+    
+    /// ГРОМКИЕ КРИЧАЩИЕ ЗВУКИ для режима безумия
+    func playCrazyModeSounds() {
+        guard soundsEnabled else { return }
+        
+        queue.async { [weak self] in
+            // Интенсивная серия громких кричащих звуков
+            for i in 0..<15 {
+                DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.15) {
+                    if i % 3 == 0 {
+                        self?.playSystemSound(type: .screech, volume: 1.0)
+                    } else if i % 3 == 1 {
+                        self?.playSystemSound(type: .deepRumble, volume: 1.0)
+                    } else {
+                        self?.playSystemSound(type: .staticNoise, volume: 1.0)
+                    }
+                }
+            }
+            
+            // Дополнительные звуки
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                for j in 0..<5 {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + Double(j) * 0.1) {
+                        self?.playSystemSound(type: .screech, volume: 0.9)
+                    }
+                }
+            }
+        }
+    }
 }
 
 enum HorrorSoundType {

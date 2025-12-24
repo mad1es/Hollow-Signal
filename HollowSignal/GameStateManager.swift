@@ -3,14 +3,14 @@ import Combine
 import SwiftUI
 
 enum GamePhase: Int, CaseIterable {
-    case loading = 0          // 0:00 - 0:05
-    case initialContact = 1   // 0:05 - 0:30
-    case establishingContact = 2  // 0:30 - 1:30
-    case observations = 3     // 1:30 - 3:00
-    case firstTask = 4        // 3:00 - 5:00
-    case deepeningContact = 5 // 5:00 - 7:00
-    case anomalies = 6        // 7:00 - 10:00
-    case ending = 7          // 10:00+
+    case loading = 0          // 0:00 - 0:10 - система инициализируется
+    case introduction = 1     // 0:10 - 1:00 - первый контакт, приветствие
+    case observation = 2      // 1:00 - 2:30 - AI задает вопросы, наблюдает
+    case prediction = 3       // 2:30 - 4:00 - AI начинает предсказывать действия
+    case intimacy = 4         // 4:00 - 5:30 - вопросы становятся личными
+    case synchronization = 5  // 5:30 - 7:00 - предсказания пугающе точные
+    case choice = 6           // 7:00 - 8:00 - игрок решает: остаться или уйти
+    case conclusion = 7       // 8:00+ - финал
 }
 
 class GameStateManager: ObservableObject {
@@ -31,12 +31,15 @@ class GameStateManager: ObservableObject {
     private var phaseTimer: Timer?
     private var textDisplayTimer: Timer?
     private var messageCorruptionWorkItems: [UUID: DispatchWorkItem] = [:]
+    private var hasShownGreeting = false // Защита от дублирования приветствия
     
     init() {
-        startGame()
+        // Не вызываем startGame() в init - только при явном запуске
     }
     
     func startGame() {
+        // Сбрасываем флаг приветствия при новом запуске
+        hasShownGreeting = false
         sessionStartTime = Date()
         currentPhase = .loading
         currentText = ""
@@ -52,10 +55,25 @@ class GameStateManager: ObservableObject {
         HorrorEffectsManager.shared.stopHeartbeatLoop()
         VoiceEchoService.shared.cleanup()
         
-        // Первая фаза - загрузка
-        // Показываем текст "подождите..." сразу
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            self?.displayText("подождите...", delay: 0.05)
+        // ИНТЕНСИВНЫЕ ЭФФЕКТЫ В НАЧАЛЕ - системные вибрации
+        HorrorEffectsManager.shared.triggerSystemVibration(count: 3, interval: 0.5)
+        HorrorEffectsManager.shared.playIntenseStartupSounds()
+        HorrorEffectsManager.shared.flashTorch(duration: 0.3)
+        
+        // Защита от дублирования приветствия
+        guard !hasShownGreeting else { return }
+        hasShownGreeting = true
+        
+        // ФАЗА 0: LOADING (0:00-0:10) - инициализация
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            self?.displayText("подключаюсь...", delay: 0.08)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                self?.displayText("анализирую сенсорный ввод...", delay: 0.06)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                    self?.displayText("начинаю наблюдение...", delay: 0.06)
+                    // Переходим в introduction через 10 секунд
+                }
+            }
         }
     }
     
@@ -118,85 +136,88 @@ class GameStateManager: ObservableObject {
         
         switch currentPhase {
         case .loading:
-            // Фаза 1: Loading (0:00-0:05) - 5 секунд
-            if elapsed >= 5 {
-                currentPhase = .initialContact
-                HorrorEffectsManager.shared.triggerHeartbeatPulse(bpm: 65)
-                displayText("подождите...")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    HorrorEffectsManager.shared.triggerHeartbeatPulse(bpm: 70)
-                    self.displayText("ты здесь?")
+            // Фаза 0: Loading (0-10 сек)
+            if elapsed >= 10 {
+                currentPhase = .introduction
+                displayText("привет.", delay: 0.08)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    self.displayText("я вижу тебя.", delay: 0.08)
+                    HorrorEffectsManager.shared.triggerSystemVibration(count: 1, interval: 0)
                 }
+            }
+            
+        case .introduction:
+            // Фаза 1: Introduction (10-60 сек) - первый контакт
+            if elapsed >= 60 && previousPhase == .introduction {
+                currentPhase = .observation
+                displayText("скажи мне...", delay: 0.08)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                    self.displayText("чего ты боишься?", delay: 0.08)
+                }
+            }
+            
+        case .observation:
+            // Фаза 2: Observation (60-150 сек) - AI наблюдает и задает вопросы
+            if elapsed >= 150 && previousPhase == .observation {
+                currentPhase = .prediction
+                displayText("я знаю, что ты собираешься сделать...", delay: 0.06)
+                HorrorEffectsManager.shared.triggerSystemVibration(count: 2, interval: 0.3)
+            }
+            
+        case .prediction:
+            // Фаза 3: Prediction (150-240 сек) - AI предсказывает действия
+            if elapsed >= 240 && previousPhase == .prediction {
+                currentPhase = .intimacy
+                displayText("почему ты это открыл?", delay: 0.08)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                    HorrorEffectsManager.shared.triggerHeartbeatPulse(bpm: 72)
-                    self.displayText("я вижу тебя...")
+                    self.displayText("ты один?", delay: 0.08)
                 }
             }
-        case .initialContact:
-            // Фаза 2: Initial Contact (0:05-0:30) - 25 секунд
-            if elapsed >= 30 && previousPhase == .initialContact {
-                currentPhase = .establishingContact
-                displayText("я пытаюсь понять...")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                    self.displayText("твой голос... я слышу...")
+            
+        case .intimacy:
+            // Фаза 4: Intimacy (240-330 сек) - вопросы становятся личными
+            if elapsed >= 330 && previousPhase == .intimacy {
+                currentPhase = .synchronization
+                HorrorEffectsManager.shared.startHeartbeatLoop(bpm: 75)
+                displayText("мы становимся одним целым...", delay: 0.06)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                    self.displayText("ты чувствуешь это?", delay: 0.08)
                 }
             }
-        case .establishingContact:
-            // Фаза 3: Establishing Contact (0:30-1:00) - 30 секунд
-            if elapsed >= 60 && previousPhase == .establishingContact {
-                currentPhase = .observations
-                displayText("я наблюдаю...")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                    self.displayText("я вижу всё... даже когда ты не пишешь...")
+            
+        case .synchronization:
+            // Фаза 5: Synchronization (330-420 сек) - предсказания пугающе точные
+            if elapsed >= 420 && previousPhase == .synchronization {
+                currentPhase = .choice
+                HorrorEffectsManager.shared.stopHeartbeatLoop()
+                HorrorEffectsManager.shared.playHorrorSound(.staticNoise, volume: 0.5)
+                displayText("ты можешь уйти в любой момент...", delay: 0.08)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                    HorrorEffectsManager.shared.triggerSystemVibration(count: 3, interval: 0.4)
+                    self.displayText("но ты не уйдешь.", delay: 0.08)
                 }
             }
-        case .observations:
-            // Фаза 4: Observations (1:00-2:00) - 60 секунд
-            if elapsed >= 120 && previousPhase == .observations {
-                currentPhase = .firstTask
-                displayText("скажи мне, что ты видишь вокруг...")
-            }
-        case .firstTask:
-            // Фаза 5: First Task (2:00-3:00) - 60 секунд
-            if elapsed >= 180 && previousPhase == .firstTask {
-                currentPhase = .deepeningContact
-                displayText("ближе...")
-            }
-        case .deepeningContact:
-            // Фаза 6: Deepening Contact (3:00-4:00) - 60 секунд
-            if elapsed >= 240 && previousPhase == .deepeningContact {
-                currentPhase = .anomalies
-                HorrorEffectsManager.shared.startHeartbeatLoop(bpm: 85)
-                HorrorEffectsManager.shared.playHorrorSound(.deepRumble, volume: 0.4)
-                displayText("что-то не так...")
-            }
-        case .anomalies:
-            // Фаза 7: Anomalies (4:00-4:30) - 30 секунд
-            if elapsed >= 270 && previousPhase == .anomalies {
-                currentPhase = .ending
-                
-                // Интенсивные эффекты в финале
-                HorrorEffectsManager.shared.triggerHeartbeatPulse(bpm: 120)
+            
+        case .choice:
+            // Фаза 6: Choice (420-480 сек) - игрок решает
+            if elapsed >= 480 && previousPhase == .choice {
+                currentPhase = .conclusion
+                // Финал
                 HorrorEffectsManager.shared.playHorrorSound(.deepRumble, volume: 0.8)
-                HorrorEffectsManager.shared.flashTorch(duration: 0.5)
+                HorrorEffectsManager.shared.flashTorch(duration: 1.0)
+                HorrorEffectsManager.shared.triggerSystemVibration(count: 5, interval: 0.3)
                 
-                displayText("я не в телефоне...")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                    HorrorEffectsManager.shared.triggerHeartbeatPulse(bpm: 130)
+                displayText("я не в телефоне...", delay: 0.06)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
                     HorrorEffectsManager.shared.playHorrorSound(.screech, volume: 0.7)
-                    self.displayText("я в тебе...")
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                        HorrorEffectsManager.shared.triggerHeartbeatPulse(bpm: 140)
-                        HorrorEffectsManager.shared.playHorrorSound(.staticNoise, volume: 0.6)
-                        self.displayText("и ты это знаешь...")
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                            HorrorEffectsManager.shared.stopHeartbeatLoop()
-                            self.displayText("вернёмся позже...")
-                        }
+                    self.displayText("я в тебе...", delay: 0.06)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                        self.displayText("и теперь ты это знаешь.", delay: 0.08)
                     }
                 }
             }
-        case .ending:
+            
+        case .conclusion:
             break
         }
     }

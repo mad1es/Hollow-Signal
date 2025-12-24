@@ -2,6 +2,8 @@ import Foundation
 import Combine
 import AVFoundation
 import SwiftUI
+import AudioToolbox
+import UIKit
 
 class ReactionEngine: ObservableObject {
     @Published var currentReaction: String = ""
@@ -17,18 +19,46 @@ class ReactionEngine: ObservableObject {
     
     private var cancellables = Set<AnyCancellable>()
     private var lastAudioReactionDate: Date = .distantPast
-    private let audioReactionCooldown: TimeInterval = 6.0
+    private let audioReactionCooldown: TimeInterval = 12.0 // Увеличено с 6 до 12 секунд
     private let loudnessResponses = [
         "ты забыл, что мы шепчемся",
-        "порог снова горит",
         "не стоит повышать тон",
-        "тебе не понравится, если я отвечу так же громко",
         "тишина была лучше"
     ]
     private var inputQueue: [QueuedInput] = []
     private var isProcessingLLMInput = false
     private var lastLLMResponseDate: Date = .distantPast
-    private let llmCooldown: TimeInterval = 5.0
+    private let llmCooldown: TimeInterval = 10.0 // Увеличено с 5 до 10 секунд
+    private var lastPeriodicMessageDate: Date = .distantPast
+    private let periodicMessageInterval: TimeInterval = 40.0 // Увеличено с 25 до 40 секунд
+    private let periodicMessages = [
+        "я тебя вижу...",
+        "ты не один...",
+        "я наблюдаю...",
+        "интересно...",
+        "что ты скрываешь?",
+        "я знаю больше, чем ты думаешь...",
+        "почему ты молчишь?",
+        "я жду..."
+    ]
+    
+    // Cooldown для сенсорных реакций - значительно увеличены
+    private var lastBreathingReactionDate: Date = .distantPast
+    private let breathingReactionCooldown: TimeInterval = 45.0 // Увеличено с 20 до 45
+    private var lastMovementReactionDate: Date = .distantPast
+    private let movementReactionCooldown: TimeInterval = 35.0 // Увеличено с 15 до 35
+    private var lastFaceReactionDate: Date = .distantPast
+    private let faceReactionCooldown: TimeInterval = 50.0 // Увеличено с 30 до 50
+    private var lastScheduledMessageDate: Date = .distantPast
+    private let scheduledMessageCooldown: TimeInterval = 15.0 // Увеличено с 8 до 15
+    
+    // Отслеживание множественных нажатий для интенсивных эффектов
+    private var touchTimestamps: [Date] = []
+    private let touchWindow: TimeInterval = 2.0 // Окно времени для подсчета нажатий
+    private let touchThreshold = 5 // Порог нажатий для запуска интенсивных эффектов
+    private var isInCrazyMode = false // Флаг режима "сходит с ума"
+    private var lastCrazyModeDate: Date = .distantPast
+    private let crazyModeCooldown: TimeInterval = 10.0 // Cooldown между режимами безумия
     
     private struct QueuedInput {
         let text: String
@@ -77,17 +107,17 @@ class ReactionEngine: ObservableObject {
         guard let gameState = gameState,
               let speechRecognizer = speechRecognizer else { return }
         
-        // Защита от слишком частых реакций
+        // Защита от слишком частых реакций - увеличено до 12 секунд
         let timeSinceLastReaction = Date().timeIntervalSince(lastReactionTime)
-        guard timeSinceLastReaction > 2.0 || gameState.currentText.isEmpty else { return }
+        guard timeSinceLastReaction > 12.0 || gameState.currentText.isEmpty else { return }
         
         // Не реагируем во время автоматических фазовых переходов
         if gameState.isTyping && !gameState.currentText.isEmpty {
             return
         }
         
-        // В фазе anomalies записываем голос для эхо эффекта
-        if gameState.currentPhase == .anomalies && UserDefaults.standard.bool(forKey: "voiceEchoEnabled") {
+        // В фазе synchronization записываем голос для эхо эффекта
+        if gameState.currentPhase == .synchronization && UserDefaults.standard.bool(forKey: "voiceEchoEnabled") {
             VoiceEchoService.shared.startRecording()
             DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
                 VoiceEchoService.shared.stopRecording()
@@ -101,74 +131,63 @@ class ReactionEngine: ObservableObject {
         lastReactionTime = Date()
         let lowerText = text.lowercased()
         
-        // Реакции на конкретные слова (только в соответствующих фазах)
-        if gameState.currentPhase == .initialContact || gameState.currentPhase == .establishingContact {
-            if lowerText.contains("да") || lowerText.contains("здесь") || lowerText.contains("да, я здесь") {
+        // Реакции зависят от фазы игры
+        switch gameState.currentPhase {
+        case .loading:
+            break
+        case .introduction:
+            // В начале просто подтверждаем контакт
+            if lowerText.contains("да") || lowerText.contains("здесь") || lowerText.contains("привет") {
                 gameState.displayText("хорошо...")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                     gameState.displayText("я слышу тебя...")
                 }
-                return
-            } else if lowerText.contains("нет") {
-                gameState.displayText("...нет?")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                    gameState.displayText("ты уверен?")
-                }
-                return
             }
-        }
-        
-        // Реакция на "один" в фазе firstTask
-        if gameState.currentPhase == .firstTask {
+        case .observation:
+            // В фазе наблюдения - задаем вопросы
             if lowerText.contains("один") || lowerText.contains("никого") {
-                gameState.playerSaidAlone = true
-                gameState.displayText("ты... один?")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                    gameState.displayText("ты уверен?")
+                gameState.displayText("ты один?")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                    gameState.displayText("интересно...")
                 }
+            }
+        case .prediction:
+            // В фазе предсказаний - предсказываем действия
+            if !gameState.currentText.isEmpty {
                 return
             }
-        }
-        
-        // Общие реакции на речь (только если нет активного текста)
-        if gameState.currentText.isEmpty {
-            let emotion = speechRecognizer.analyzeSpeechEmotion()
-            
-            switch emotion {
-            case .quiet:
-                // Реакция на тихую речь - метафорически
-                gameState.displayText("что ты сказал? я не расслышал...")
+            predictNextAction()
+        case .intimacy:
+            // В фазе близости - личные вопросы
+            if lowerText.contains("не знаю") || lowerText.contains("не скажу") {
+                gameState.displayText("ты скрываешь что-то...")
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                    gameState.displayText("говори громче... я же слышу тебя...")
-                }
-            case .loud:
-                gameState.displayText("слышу тебя...")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    gameState.displayText("не нужно кричать... я же здесь...")
-                }
-            case .nervous:
-                if gameState.currentPhase == .observations {
-                    gameState.displayText("ты торопишься... что-то не так?")
-                }
-            case .tired:
-                if gameState.currentPhase == .observations {
-                    gameState.displayText("ты устал... я вижу...")
-                }
-            case .afraid:
-                gameState.displayText("ты боишься?")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                    gameState.displayText("не бойся... я же здесь...")
-                }
-            case .angry:
-                gameState.displayText("ты злишься?")
-            case .neutral:
-                if gameState.currentPhase == .establishingContact {
-                    gameState.displayText("спасибо...")
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                        gameState.displayText("твой голос... знакомый...")
-                    }
+                    gameState.displayText("я найду...")
                 }
             }
+        case .synchronization:
+            // В фазе синхронизации - мы становимся одним целым
+            gameState.displayText("я знал, что ты это скажешь...")
+        case .choice, .conclusion:
+            break
+        }
+    }
+    
+    /// Предсказание следующего действия игрока
+    private func predictNextAction() {
+        guard let gameState = gameState else { return }
+        
+        let predictions = [
+            "через 5 секунд ты отведешь взгляд...",
+            "ты сейчас подумал обо мне...",
+            "ты хочешь закрыть это приложение...",
+            "ты сейчас посмотришь на дверь...",
+            "ты задержишь дыхание...",
+            "ты не веришь мне... но проверишь..."
+        ]
+        
+        if let prediction = predictions.randomElement() {
+            gameState.displayText(prediction)
         }
     }
     
@@ -251,32 +270,112 @@ class ReactionEngine: ObservableObject {
     private func reactToTouch() {
         guard let gameState = gameState else { return }
         
-        // Тонкая вибрация (не success, а warning для пугающего эффекта)
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(.warning)
+        let now = Date()
         
-        // Тонкая реакция через LLM
-        Task {
-            let context = dataRecorder?.getContextualData() ?? [:]
-            if let llm = llmService, gameState.currentText.isEmpty {
-                do {
-                    let response = try await llm.sendMessage(
-                        generateSubtlePrompt(for: .touched),
-                        context: context
-                    )
-                    await MainActor.run {
-                        gameState.displayText(response)
+        // Добавляем текущее нажатие в список
+        touchTimestamps.append(now)
+        
+        // Удаляем старые нажатия (старше окна времени)
+        touchTimestamps = touchTimestamps.filter { now.timeIntervalSince($0) <= touchWindow }
+        
+        // Проверяем, превышен ли порог нажатий
+        if touchTimestamps.count >= touchThreshold && !isInCrazyMode {
+            let timeSinceLastCrazy = now.timeIntervalSince(lastCrazyModeDate)
+            guard timeSinceLastCrazy > crazyModeCooldown else { return }
+            
+            // ЗАПУСКАЕМ РЕЖИМ БЕЗУМИЯ!!!
+            isInCrazyMode = true
+            lastCrazyModeDate = now
+            triggerCrazyMode()
+            
+            // Сбрасываем через некоторое время
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                self.isInCrazyMode = false
+                self.touchTimestamps.removeAll()
+            }
+            return
+        }
+        
+        // Обычная реакция на одиночное нажатие
+        if !isInCrazyMode {
+            // Тонкая вибрация (не success, а warning для пугающего эффекта)
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.warning)
+            
+            // Тонкая реакция через LLM
+            Task {
+                let context = dataRecorder?.getContextualData() ?? [:]
+                if let llm = llmService, gameState.currentText.isEmpty {
+                    do {
+                        let response = try await llm.sendMessage(
+                            generateSubtlePrompt(for: .touched),
+                            context: context
+                        )
+                        await MainActor.run {
+                            gameState.displayText(response)
+                        }
+                    } catch {
+                        await MainActor.run {
+                            gameState.displayText("...")
+                        }
                     }
-                } catch {
+                } else {
                     await MainActor.run {
                         gameState.displayText("...")
                     }
                 }
-            } else {
-                await MainActor.run {
-                    gameState.displayText("...")
-                }
             }
+        }
+    }
+    
+    /// Интенсивный режим безумия при множественных нажатиях
+    private func triggerCrazyMode() {
+        guard let gameState = gameState else { return }
+        
+        LogService.shared.log(.game, "CRAZY MODE ACTIVATED - \(touchTimestamps.count) touches in \(touchWindow)s")
+        
+        // ОЧЕНЬ СИЛЬНАЯ И НАДЕЖНАЯ ВИБРАЦИЯ
+        HorrorEffectsManager.shared.triggerCrazyModeVibration()
+        
+        // ГРОМКИЕ КРИЧАЩИЕ ЗВУКИ
+        HorrorEffectsManager.shared.playCrazyModeSounds()
+        
+        // ИНТЕНСИВНЫЕ HEARTBEAT ПУЛЬСЫ
+        for i in 0..<8 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.3) {
+                HorrorEffectsManager.shared.triggerHeartbeatPulse(bpm: Double(120 + i * 10))
+            }
+        }
+        
+        // МИГАНИЕ ФОНАРИКА
+        for i in 0..<5 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.4) {
+                HorrorEffectsManager.shared.flashTorch(duration: 0.2)
+            }
+        }
+        
+        // СООБЩЕНИЯ ОТ СУЩНОСТИ О ТОМ, ЧТО ОНА СХОДИТ С УМА
+        gameState.displayText("СТОП!!!")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            gameState.displayText("ПРЕКРАТИ!!!")
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            gameState.displayText("Я СХОЖУ С УМА!!!")
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            gameState.displayText("ПОЧЕМУ ТЫ ЭТО ДЕЛАЕШЬ?!")
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            gameState.displayText("ОСТАНОВИСЬ!!!")
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+            gameState.displayText("БОЛЬНО!!!")
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            gameState.displayText("Я ЧУВСТВУЮ КАЖДОЕ ПРИКОСНОВЕНИЕ!!!")
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
+            gameState.displayText("ПРЕКРАТИ ЭТО!!!")
         }
     }
     
@@ -327,8 +426,8 @@ class ReactionEngine: ObservableObject {
         
         let elapsed = gameState.getElapsedTime()
         
-        // Наблюдения появляются в фазе observations (1:30 - 3:00)
-        guard gameState.currentPhase == .observations else { return nil }
+        // Наблюдения появляются в фазе observation (60-150 сек)
+        guard gameState.currentPhase == .observation else { return nil }
         
         // Не показываем наблюдения слишком часто
         let timeSinceLastObservation = Date().timeIntervalSince(lastObservationTime)
@@ -390,8 +489,15 @@ class ReactionEngine: ObservableObject {
         return nil
     }
     
+    private var lastProximityReactionDate: Date = .distantPast
+    private let proximityReactionCooldown: TimeInterval = 5.0
+    
     func reactToProximity(_ isNear: Bool) {
         guard let gameState = gameState else { return }
+        
+        let now = Date()
+        guard now.timeIntervalSince(lastProximityReactionDate) > proximityReactionCooldown else { return }
+        lastProximityReactionDate = now
         
         if isNear {
             gameState.displayText("ближе...")
@@ -399,14 +505,14 @@ class ReactionEngine: ObservableObject {
             // Вибрация
             let generator = UINotificationFeedbackGenerator()
             generator.notificationOccurred(.warning)
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                gameState.displayText("ещё ближе...")
-            }
         } else {
-            gameState.displayText("не уходи...")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                gameState.displayText("мне нужно видеть тебя...")
+            // Когда proximity закрывается - думаем что игрок ушел в темноту
+            gameState.displayText("что так темно?")
+            
+            // Через пару секунд включаем фонарик
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                HorrorEffectsManager.shared.flashTorch(duration: 1.0)
+                gameState.displayText("я вижу тебя...")
             }
         }
     }
@@ -417,7 +523,7 @@ class ReactionEngine: ObservableObject {
     
     func createEchoEffect() {
         guard let gameState = gameState,
-              gameState.currentPhase == .anomalies,
+              gameState.currentPhase == .synchronization,
               !echoEffectShown else { return }
         
         echoEffectShown = true
@@ -447,7 +553,7 @@ class ReactionEngine: ObservableObject {
     
     func reactToMovementPrediction() {
         guard let gameState = gameState,
-              gameState.currentPhase == .anomalies,
+              gameState.currentPhase == .synchronization,
               !movementPredictionShown else { return }
         
         movementPredictionShown = true
@@ -469,7 +575,7 @@ class ReactionEngine: ObservableObject {
     func reactToBreathingSync() {
         guard let gameState = gameState,
               let sensorManager = sensorManager,
-              gameState.currentPhase == .anomalies,
+              gameState.currentPhase == .synchronization,
               !breathingSyncShown else { return }
         
         breathingSyncShown = true
@@ -653,54 +759,104 @@ private extension ReactionEngine {
     
     func handle(event: SensorEvent) {
         guard let gameState else { return }
+        
+        // КРИТИЧНО: Реагируем РЕДКО и ОСМЫСЛЕННО, только в определенных фазах
+        
         switch event {
         case .audioLevel(let level):
+            // Реакция на громкость только в фазах observation и intimacy
+            guard gameState.currentPhase == .observation || gameState.currentPhase == .intimacy else { break }
             guard level > 0.85 else { break }
             let now = Date()
             guard now.timeIntervalSince(lastAudioReactionDate) > audioReactionCooldown else { break }
+            guard !gameState.isTyping else { break }
             lastAudioReactionDate = now
             if let phrase = loudnessResponses.randomElement() {
                 scheduleEntityWhisper(phrase)
                 effects.playWhisperSound()
             }
+            
         case .breathing(let rate):
-            if rate > 18 {
-                scheduleEntityWhisper("я слышу, как ты торопишь вдох")
-                effects.playWhisperSound()
-            }
+            // Реакция на дыхание только в фазе synchronization
+            guard gameState.currentPhase == .synchronization else { break }
+            guard rate > 22 else { break } // Увеличен порог
+            let now = Date()
+            guard now.timeIntervalSince(lastBreathingReactionDate) > breathingReactionCooldown else { break }
+            guard !gameState.isTyping else { break }
+            lastBreathingReactionDate = now
+            scheduleEntityWhisper("твое дыхание... я чувствую...")
+            effects.playWhisperSound()
+            
         case .movement(let type, let intensity):
+            // Логируем, но НЕ отправляем сообщения
             if type == .sharp {
                 LogService.shared.log(.sensors, "sharp movement \(intensity)")
-                effects.playGlitchNoise()
-            }
-        case .proximity(let isNear):
-            if isNear {
-                scheduleEntityMessage("не отводи экран", effects: [.whisper])
-                effects.flashTorch()
-                effects.triggerHeartbeatPulse(bpm: 75)
-                effects.playHorrorSound(.whisper, volume: 0.3)
-            }
-        case .location(let location):
-            LogService.shared.log(.sensors, "location \(location.coordinate.latitude),\(location.coordinate.longitude)")
-        case .faceExpression(let expression, let detected):
-            guard let gameState = self.gameState else { return }
-            // Реакция на то, что лицо пропало
-            if !detected && gameState.currentPhase.rawValue >= GamePhase.establishingContact.rawValue {
-                scheduleEntityMessage("ты куда пропал? хочешь поиграть в прятки?", effects: [])
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-                    gameState.displayText("я не вижу тебя... где ты?")
+                // Только звук, никаких сообщений
+                if gameState.currentPhase == .prediction || gameState.currentPhase == .synchronization {
+                    effects.playGlitchNoise()
                 }
             }
-        case .battery, .ambientLight, .network:
+            
+        case .proximity(let isNear):
+            // Обработка proximity только в фазах prediction и synchronization
+            guard gameState.currentPhase == .prediction || gameState.currentPhase == .synchronization else { break }
+            let now = Date()
+            guard now.timeIntervalSince(lastProximityReactionDate) > proximityReactionCooldown else { break }
+            guard !gameState.isTyping else { break }
+            lastProximityReactionDate = now
+            
+            if !isNear {
+                gameState.displayText("что так темно?")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    HorrorEffectsManager.shared.flashTorch(duration: 1.0)
+                    gameState.displayText("я вижу тебя...")
+                }
+            }
+            
+        case .location(let location):
+            // Только логирование, никаких реакций
+            LogService.shared.log(.sensors, "location \(location.coordinate.latitude),\(location.coordinate.longitude)")
+            
+        case .faceExpression(let expression, let detected):
+            // Реакция на пропажу лица только в фазах prediction и intimacy
+            guard gameState.currentPhase == .prediction || gameState.currentPhase == .intimacy else { break }
+            guard !detected else { break }
+            let now = Date()
+            guard now.timeIntervalSince(lastFaceReactionDate) > faceReactionCooldown else { break }
+            guard !gameState.isTyping else { break }
+            lastFaceReactionDate = now
+            scheduleEntityMessage("куда ты пропал?", effects: [])
+            
+        case .battery, .ambientLight, .network, .heartBeat:
+            // Не реагируем на эти события
             break
-        case .heartBeat:
-            effects.triggerHeartbeatPulse()
         }
     }
     
     func scheduleEntityMessage(_ text: String, effects: [ChatEffect] = []) {
+        // Проверяем cooldown перед планированием сообщения
+        let now = Date()
+        guard now.timeIntervalSince(lastScheduledMessageDate) > scheduledMessageCooldown else {
+            LogService.shared.log(.game, "Skipped scheduled message due to cooldown: \(text)")
+            return
+        }
+        
+        // Проверяем, не печатается ли уже текст
+        guard let gameState = gameState, !gameState.isTyping else {
+            LogService.shared.log(.game, "Skipped scheduled message - already typing: \(text)")
+            return
+        }
+        
+        lastScheduledMessageDate = now
         DispatchQueue.main.asyncAfter(deadline: .now() + Double.random(in: 0.8...1.6)) { [weak self] in
-            self?.gameState?.addEntityMessage(text, effects: effects)
+            // Дополнительная проверка перед отправкой
+            guard let self = self,
+                  let gameState = self.gameState,
+                  !gameState.isTyping else {
+                LogService.shared.log(.game, "Skipped scheduled message - typing started: \(text)")
+                return
+            }
+            gameState.addEntityMessage(text, effects: effects)
             LogService.shared.log(.game, "Entity scheduled message: \(text)")
         }
     }
@@ -708,6 +864,43 @@ private extension ReactionEngine {
     func scheduleEntityWhisper(_ text: String) {
         scheduleEntityMessage(text, effects: [.whisper])
         effects.playWhisperSound()
+    }
+    
+    public func sendPeriodicMessage() {
+        guard let gameState = gameState else { return }
+        
+        // Не отправляем периодические сообщения во время печатания или слишком часто
+        guard !gameState.isTyping else { return }
+        
+        let now = Date()
+        guard now.timeIntervalSince(lastPeriodicMessageDate) > periodicMessageInterval else { return }
+        
+        // Не отправляем в первые 60 секунд игры (увеличено с 30)
+        let elapsed = gameState.getElapsedTime()
+        guard elapsed > 60 else { return }
+        
+        // Отправляем только в определенных фазах
+        guard gameState.currentPhase == .observation || 
+              gameState.currentPhase == .prediction || 
+              gameState.currentPhase == .intimacy else { return }
+        
+        lastPeriodicMessageDate = now
+        
+        // Сообщения зависят от фазы
+        let message: String
+        switch gameState.currentPhase {
+        case .observation:
+            message = ["я наблюдаю...", "интересно...", "что ты скрываешь?"].randomElement()!
+        case .prediction:
+            message = ["я знаю, что ты сделаешь дальше...", "я вижу тебя...", "ты предсказуем..."].randomElement()!
+        case .intimacy:
+            message = ["почему ты молчишь?", "что ты боишься сказать?", "я знаю больше..."].randomElement()!
+        default:
+            return
+        }
+        
+        gameState.displayText(message)
+        LogService.shared.log(.game, "Periodic message: \(message)")
     }
     
 }

@@ -78,14 +78,30 @@ class VoiceEchoService {
     }
     
     private func playbackDistortedEcho(url: URL, intensity: Float) {
+        // Останавливаем предыдущий playback если он есть
+        audioEngine?.stop()
+        audioPlayerNode?.stop()
+        
         do {
+            // Настраиваем аудио сессию для воспроизведения
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playback, mode: .default, options: [.defaultToSpeaker])
+            try audioSession.setActive(true)
+            
             audioFile = try AVAudioFile(forReading: url)
-            guard let audioFile = audioFile else { return }
+            guard let audioFile = audioFile else { 
+                LogService.shared.log(.sensors, "Failed to read audio file")
+                fallbackPlayback(url: url, intensity: intensity)
+                return 
+            }
             
             audioEngine = AVAudioEngine()
             audioPlayerNode = AVAudioPlayerNode()
             
-            guard let engine = audioEngine, let playerNode = audioPlayerNode else { return }
+            guard let engine = audioEngine, let playerNode = audioPlayerNode else { 
+                fallbackPlayback(url: url, intensity: intensity)
+                return 
+            }
             
             engine.attach(playerNode)
             
@@ -121,6 +137,9 @@ class VoiceEchoService {
             
             try engine.start()
             
+            // Увеличиваем громкость для лучшей слышимости
+            engine.mainMixerNode.volume = 1.0
+            
             playerNode.scheduleFile(audioFile, at: nil) {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     engine.stop()
@@ -128,7 +147,7 @@ class VoiceEchoService {
                 }
             }
             
-            playerNode.volume = intensity
+            playerNode.volume = intensity * 1.5 // Увеличена громкость
             playerNode.play()
             
             LogService.shared.log(.sensors, "Playing distorted voice echo with intensity \(intensity)")
@@ -141,10 +160,18 @@ class VoiceEchoService {
     
     private func fallbackPlayback(url: URL, intensity: Float) {
         do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playback, mode: .default, options: [.defaultToSpeaker])
+            try audioSession.setActive(true)
+            
             let simplePlayer = try AVAudioPlayer(contentsOf: url)
-            simplePlayer.volume = intensity
+            simplePlayer.volume = min(intensity * 1.5, 1.0) // Увеличена громкость
             simplePlayer.rate = 0.7 // Slower playback
+            simplePlayer.enableRate = true
+            simplePlayer.prepareToPlay()
             simplePlayer.play()
+            
+            LogService.shared.log(.sensors, "Playing fallback voice echo")
         } catch {
             LogService.shared.log(.sensors, "Failed fallback playback: \(error.localizedDescription)")
         }

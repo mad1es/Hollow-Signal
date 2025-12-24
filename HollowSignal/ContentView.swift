@@ -105,6 +105,10 @@ struct ContentView: View {
             // Незаметно реагируем на сенсоры во время чата (отвлекающий маневр)
             reactToSensorsSubtly()
         }
+        .onReceive(Timer.publish(every: 25.0, on: .main, in: .common).autoconnect()) { _ in
+            // Периодические сообщения "я тебя вижу" и подобные
+            reactionEngine.sendPeriodicMessage()
+        }
     }
     
     private var gradientBackground: some View {
@@ -205,7 +209,7 @@ struct ContentView: View {
         gameState.advancePhase()
         let elapsed = gameState.getElapsedTime()
         
-        if gameState.currentPhase == .observations && !gameState.isTyping {
+        if gameState.currentPhase == .observation && !gameState.isTyping {
             Task {
                 if let observation = await reactionEngine.generateObservation() {
                     await MainActor.run {
@@ -215,7 +219,7 @@ struct ContentView: View {
             }
         }
         
-        if gameState.currentPhase == .anomalies {
+        if gameState.currentPhase == .synchronization {
             let anomaliesStartTime: TimeInterval = 240
             let timeInAnomalies = elapsed - anomaliesStartTime
             
@@ -253,7 +257,7 @@ struct ContentView: View {
         let elapsed = gameState.getElapsedTime()
         
         // В фазе наблюдений и дальше - более активные реакции
-        if gameState.currentPhase.rawValue >= GamePhase.observations.rawValue {
+        if gameState.currentPhase.rawValue >= GamePhase.observation.rawValue {
             // Если человек двигается - тонкая реакция
             if sensorManager.isMoving && Double.random(in: 0...1) > 0.7 {
                 Task {
